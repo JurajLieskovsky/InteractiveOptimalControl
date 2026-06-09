@@ -13,15 +13,38 @@ def _():
     return mo, np, sim
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""# Infinite Horizon Regulation""")
+
+
 @app.cell
 def _(mo, np):
+    state_weights = np.array([10, 10, 10, 1, 1, 1])
+    input_weights = np.array([1, 1])
+
+    alpha_step = 1e-4
+    alpha = mo.ui.slider(
+        start=alpha_step,
+        stop=1 - alpha_step,
+        step=alpha_step,
+        value=0.5,
+        debounce=True,
+        label="alpha",
+    )
+
+    timestep = mo.ui.number(value=1e-2, debounce=True, label="timestep")
+    nstep = mo.ui.number(
+        start=1, step=1, value=500, debounce=True, label="number of steps"
+    )
+
     initial_state = mo.ui.matrix(
-        np.zeros(6),
+        np.array([3, 4, 0, 0, 0, 0]),
         min_value=-5,
         max_value=5,
         step=0.1,
         debounce=True,
-        label="initial state",
+        label="Initial state",
     )
 
     target_position = mo.ui.matrix(
@@ -30,45 +53,83 @@ def _(mo, np):
         max_value=5,
         step=0.1,
         debounce=True,
-        label="target position",
+        label="Target position",
     )
 
-    mo.hstack([initial_state, target_position])
-    return initial_state, target_position
+    mo.vstack(
+        [
+            mo.hstack([timestep, mo.md("s")], justify="start"),
+            nstep,
+            mo.md(f"diag(Q) = alpha * Q0, where Q0 = {state_weights.tolist()}"),
+            mo.md(f"diag(R) = (1 - alpha) * R0, where  R0 = {input_weights.tolist()}"),
+            alpha,
+            mo.hstack([initial_state, target_position], justify="start"),
+        ]
+    )
+
+    return initial_state, input_weights, state_weights, target_position
+
 
 @app.cell
-def _(mo):
-    timestep = mo.ui.number(value=1e-2, debounce=True, label="timestep")
-    nstep = mo.ui.number(start=1, step=1, value=1000, debounce=True, label="number of steps")
-
-    mo.vstack([timestep, nstep])
-    return nstep, timestep
-    
-@app.cell
-def _(np, sim, initial_state, target_position, nstep, timestep):
+def _(
+    initial_state,
+    input_weights,
+    np,
+    nstep,
+    sim,
+    state_weights,
+    target_position,
+    alpha,
+    timestep,
+):
     x0 = np.array(initial_state.value)
     xt = np.array([target_position.value[0], target_position.value[1], 0, 0, 0, 0])
 
-    K = sim.ct_lqr_gain()
+    K = sim.ct_lqr_gain(
+        alpha.value * np.diag(state_weights), (1 - alpha.value) * np.diag(input_weights)
+    )
 
-    xs, _ = sim.simulate(
+    ts, xs, us = sim.simulate(
         nstep.value,
         timestep.value,
         x0,
         lambda x, _: sim.u_eq - K @ (x - xt),
     )
+    return ts, us, x0, xs, xt
 
-    fig, ax = sim.plot_trajectory(xs)
 
-    ax.scatter(x0[0], x0[1], label="initial")
-    ax.scatter(xt[0], xt[1], label="target")
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""## States and Inputs""")
 
-    ax.legend()
 
-    ax.set_xlim(-5, 5)
-    ax.set_ylim(-5, 5)
+@app.cell
+def plot(sim, ts, us, xs):
+    fig2, ax2 = sim.plot_states_and_inputs(ts, xs, us)
 
-    fig
+    fig2
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""## Trajectory""")
+
+
+@app.cell
+def _(sim, x0, xs, xt):
+
+    fig1, ax1 = sim.plot_trajectory(xs)
+
+    ax1.scatter(x0[0], x0[1], label="initial")
+    ax1.scatter(xt[0], xt[1], label="target")
+
+    ax1.legend()
+
+    ax1.set_xlim(-5, 5)
+    ax1.set_ylim(-5, 5)
+
+    fig1
     return
 
 

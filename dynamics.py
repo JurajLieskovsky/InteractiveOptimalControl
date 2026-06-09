@@ -48,10 +48,8 @@ B = np.array(
     ]
 )
 
-def ct_lqr_gain():
-    Q = 1e1 * np.identity(6)
-    R = np.identity(2)
 
+def ct_lqr_gain(Q, R):
     P = scipy.linalg.solve_continuous_are(A, B, Q, R)
     # K = np.linalg.solve(R + B.T @ P @ B, B.T @ P @ A)
     K = np.linalg.solve(R, B.T @ P)
@@ -64,9 +62,11 @@ def simulate(nstep, timestep, x0, controller):
     solver.set_integrator("dopri5")
     solver.set_initial_value(x0)
 
+    ts = np.zeros(nstep + 1)
     xs = [np.zeros(6) for _ in range(nstep + 1)]
     us = [np.zeros(2) for _ in range(nstep + 1)]
 
+    ts[0] = 0.0
     xs[0] = solver.y
 
     for k in range(nstep):
@@ -76,14 +76,41 @@ def simulate(nstep, timestep, x0, controller):
 
         us[k] = u
         xs[k + 1] = solver.y
+        ts[k + 1] = solver.t
 
     us[nstep] = us[nstep - 1]
 
-    return xs, us
+    return ts, xs, us
 
 
 def plot_trajectory(xs):
     fig, ax = plt.subplots()
+
     ax.plot([x[0] for x in xs], [x[1] for x in xs])
+
+    ax.set_xlabel("x [m]")
+    ax.set_ylabel("y [m]")
+
+    return fig, ax
+
+
+def plot_states_and_inputs(ts, xs, us):
+    fig, ax = plt.subplots(3)
+
+    for i in range(3):
+        ax[0].plot(ts, [x[i] for x in xs], label=f"x{i}")
+
+    for i in range(3, 6):
+        ax[1].plot(ts, [x[i] for x in xs], label=f"x{i}")
+
+    for i in range(2):
+        ax[2].step(ts, [u[i] for u in us], where="post", label=f"u{i}")
+
+    ax[2].set_xlabel("t [s]")
+    ax[2].set_ylabel("[N]")
+
+    ax[0].legend()
+    ax[1].legend()
+    ax[2].legend()
 
     return fig, ax
