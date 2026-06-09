@@ -85,19 +85,15 @@ def _(
     x0 = np.array(initial_state.value)
     xt = np.array([target_position.value[0], target_position.value[1], 0, 0, 0, 0])
 
-    K = sim.lqr_gain(
-        alpha.value * np.diag(state_weights),
-        (1 - alpha.value) * np.diag(input_weights),
-        timestep.value,
-    )
+    q = alpha.value * np.diag(state_weights)
+    r = (1 - alpha.value) * np.diag(input_weights)
+    dt = timestep.value
 
-    ts, xs, us = sim.simulate(
-        nstep.value,
-        timestep.value,
-        x0,
-        lambda x, _: sim.u_eq - K @ (x - xt),
-    )
-    return ts, us, x0, xs, xt
+    lqr_controller = sim.LQR(xt, sim.u_eq, q, r, dt)
+
+    ts, xs, us = sim.simulate(nstep.value, timestep.value, x0, lqr_controller.input)
+
+    return ts, us, xs, x0, xt
 
 
 @app.cell(hide_code=True)

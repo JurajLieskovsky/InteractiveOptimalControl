@@ -49,14 +49,20 @@ B = np.array(
 )
 
 
-def lqr_gain(Q, R, dt):
-    dtA = np.eye(6) + dt * A
-    dtB = dt * B
+class LQR:
+    def __init__(self, x_eq, u_eq, q, r, dt):
+        self.x_eq = x_eq
+        self.u_eq = u_eq
 
-    P = scipy.linalg.solve_discrete_are(dtA, dtB, Q, R)
-    K = np.linalg.solve(R + dtB.T @ P @ dtB, dtB.T @ P @ dtA)
+        dtA = np.eye(6) + dt * A
+        dtB = dt * B
 
-    return K
+        P = scipy.linalg.solve_discrete_are(dtA, dtB, q, r)
+
+        self.K = np.linalg.solve(r + dtB.T @ P @ dtB, dtB.T @ P @ dtA)
+
+    def input(self, x, _):
+        return self.u_eq - self.K @ (x - self.x_eq)
 
 
 def simulate(nstep, timestep, x0, controller):
