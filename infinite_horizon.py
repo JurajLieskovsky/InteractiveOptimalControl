@@ -91,7 +91,9 @@ def _(
 
     lqr_controller = sim.LQR(xt, sim.u_eq, q, r, dt)
 
-    ts, xs, us = sim.simulate(nstep.value, timestep.value, x0, lqr_controller.input)
+    ts, xs, us = sim.simulate(
+        nstep.value, dt, x0, lqr_controller.input, u_min=0.0, u_max=8.0
+    )
 
     return ts, us, xs, x0, xt
 

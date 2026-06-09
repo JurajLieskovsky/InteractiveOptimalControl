@@ -65,7 +65,16 @@ class LQR:
         return self.u_eq - self.K @ (x - self.x_eq)
 
 
-def simulate(nstep, timestep, x0, controller):
+def input_saturation(u, u_min, u_max):
+    if u < u_min:
+        return u_min
+    elif u > u_max:
+        return u_max
+    else:
+        return u
+
+
+def simulate(nstep, timestep, x0, controller, u_min=-np.inf, u_max=np.inf):
     solver = scipy.integrate.ode(f)
     solver.set_integrator("dopri5")
     solver.set_initial_value(x0)
@@ -78,7 +87,9 @@ def simulate(nstep, timestep, x0, controller):
     xs[0] = solver.y
 
     for k in range(nstep):
-        u = controller(solver.y, k)
+        u = np.array(
+            [input_saturation(input, u_min, u_max) for input in controller(solver.y, k)]
+        )
         solver.set_f_params(u)
         solver.integrate(solver.t + timestep)
 
