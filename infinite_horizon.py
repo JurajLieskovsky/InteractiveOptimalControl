@@ -7,66 +7,46 @@ app = marimo.App()
 @app.cell
 def _():
     import marimo as mo
-    import wigglystuff as ws
-    import matplotlib.pyplot as plt
+    import numpy as np
+    import dynamics as sim
 
-    return mo, ws, plt
+    return mo, np, sim
+
 
 @app.cell
 def _(mo):
-    get_x, set_x = mo.state(0)
-    get_y, set_y = mo.state(0)
-    return get_x, set_x, get_y, set_y
-
-@app.cell
-def _(ws, mo):
-    target_state = mo.ui.anywidget(
-        ws.Slider2D(
-            width=160,
-            height=160,
-            x_bounds=(-2.0, 2.0),
-            y_bounds=(-1.0, 1.5),
-            debounce=True
-        )
+    target_x = mo.ui.number(
+        start=-10, stop=10, step=0.1, value=0, debounce=True, label="xt"
+    )
+    target_y = mo.ui.number(
+        start=-10, stop=10, step=0.1, value=0, debounce=True, label="yt"
     )
 
-    button = mo.ui.run_button()
-
-    mo.hstack([target_state, button])
-
-    return button, target_state
-
-@app.cell
-def _(mo, target_state, button, set_x, set_y):
-    mo.stop(not button.value)
-    set_x(target_state.x)
-    set_y(target_state.y)
+    mo.vstack([target_x, target_y])
+    return target_x, target_y
 
 
 @app.cell
-def _(plt, get_x, get_y):
+def _(np, sim, target_x, target_y):
 
-    x_ref = get_x()
-    y_ref = get_y()
+    x_eq = np.array([target_x.value, target_y.value, 0, 0, 0, 0.0])
 
-    fig, ax = plt.subplots()
-    ax.set_xlim(-2, 2)
-    ax.set_ylim(-2, 2)
+    K = sim.ct_lqr_gain()
 
-    ax.scatter(x_ref, y_ref)
-    ax.quiver(
-        0,
-        0,
-        x_ref,
-        y_ref,
-        angles="xy",
-        scale_units="xy",
-        scale=2,
+    xs, _ = sim.simulate(
+        500,
+        1e-2,
+        np.zeros(6),
+        lambda x, _: sim.u_eq - K @ (x - x_eq),
     )
-    ax.grid(True, alpha=0.3)
+
+    fig, ax = sim.plot_trajectory(xs)
+
+    ax.set_xlim(-10, 10)
+    ax.set_ylim(-10, 10)
 
     fig
-    return (fig,)
+    return
 
 
 if __name__ == "__main__":
