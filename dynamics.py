@@ -99,17 +99,18 @@ def plot_trajectory(xs):
 def plot_states_and_inputs(ts, xs, us):
     fig, ax = plt.subplots(3)
 
-    for i in range(3):
-        ax[0].plot(ts, [x[i] for x in xs], label=f"x{i}")
+    for i, lbl in enumerate([r"$x$ [m]", r"$y$ [m]", r"$\theta$ [rad]"]):
+        ax[0].plot(ts, [x[i] for x in xs], label=lbl)
 
-    for i in range(3, 6):
-        ax[1].plot(ts, [x[i] for x in xs], label=f"x{i}")
+    for i, lbl in enumerate(
+        [r"$\dot{x}$ [m/s]", r"$\dot{y}$ [m/s]", r"$\dot{\theta}$ [rad/s]"]
+    ):
+        ax[1].plot(ts, [x[i + 3] for x in xs], label=lbl)
 
-    for i in range(2):
-        ax[2].step(ts, [u[i] for u in us], where="post", label=f"u{i}")
+    for i, lbl in enumerate([r"$u_L$ [N]", r"$u_R$ [N]"]):
+        ax[2].step(ts, [u[i] for u in us], where="post", label=lbl)
 
-    ax[2].set_xlabel("t [s]")
-    ax[2].set_ylabel("[N]")
+    ax[2].set_xlabel("$t$ [s]")
 
     ax[0].legend()
     ax[1].legend()
