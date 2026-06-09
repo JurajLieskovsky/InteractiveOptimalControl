@@ -49,10 +49,12 @@ B = np.array(
 )
 
 
-def ct_lqr_gain(Q, R):
-    P = scipy.linalg.solve_continuous_are(A, B, Q, R)
-    # K = np.linalg.solve(R + B.T @ P @ B, B.T @ P @ A)
-    K = np.linalg.solve(R, B.T @ P)
+def lqr_gain(Q, R, dt):
+    dtA = np.eye(6) + dt * A
+    dtB = dt * B
+
+    P = scipy.linalg.solve_discrete_are(dtA, dtB, Q, R)
+    K = np.linalg.solve(R + dtB.T @ P @ dtB, dtB.T @ P @ dtA)
 
     return K
 

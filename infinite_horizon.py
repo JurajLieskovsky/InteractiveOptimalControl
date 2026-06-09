@@ -85,8 +85,10 @@ def _(
     x0 = np.array(initial_state.value)
     xt = np.array([target_position.value[0], target_position.value[1], 0, 0, 0, 0])
 
-    K = sim.ct_lqr_gain(
-        alpha.value * np.diag(state_weights), (1 - alpha.value) * np.diag(input_weights)
+    K = sim.lqr_gain(
+        alpha.value * np.diag(state_weights),
+        (1 - alpha.value) * np.diag(input_weights),
+        timestep.value,
     )
 
     ts, xs, us = sim.simulate(
