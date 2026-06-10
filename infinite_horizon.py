@@ -189,7 +189,7 @@ def _(
     elif controller_dropdown.value == "LQR":
         controller = sim.LQR(xt, sim.u_eq, q, r, dt)
 
-    ts, xs, us, cost = sim.simulate(
+    ts, xs, us, cs = sim.simulate(
         nstep.value,
         dt,
         x0,
@@ -200,7 +200,9 @@ def _(
         u_max=u_max,
     )
 
-    return ts, us, xs, x0, xt, cost
+    cs *= dt
+
+    return ts, us, xs, x0, xt, cs
 
 
 @app.cell(hide_code=True)
@@ -212,9 +214,11 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def plot(sim, ts, us, xs, cost):
+def plot(np, sim, ts, us, xs, cs):
     fig2, _ = sim.plot_states_and_inputs(ts, xs, us)
-    fig2.suptitle(f"Cost = {cost:.2f}")
+    fig2.suptitle(
+        f"Cost = {np.sum(cs):.2f} ({np.sum(cs[:-1]):.2f} + {np.sum(cs[-1]):.2f})"
+    )
     fig2
     return
 
@@ -228,7 +232,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(sim, x0, xs, xt, cost):
+def _(sim, x0, xs, xt):
 
     fig1, ax1 = sim.plot_trajectory(xs)
 

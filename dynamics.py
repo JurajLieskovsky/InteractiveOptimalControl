@@ -138,10 +138,9 @@ def simulate(nstep, timestep, x0, controller, running_cost, final_cost, u_min=-n
     solver.set_initial_value(x0)
 
     ts = np.zeros(nstep + 1)
+    cs = np.zeros(nstep + 1)
     xs = [np.zeros(6) for _ in range(nstep + 1)]
     us = [np.zeros(2) for _ in range(nstep + 1)]
-
-    cost = 0
 
     ts[0] = 0.0
     xs[0] = solver.y
@@ -157,13 +156,13 @@ def simulate(nstep, timestep, x0, controller, running_cost, final_cost, u_min=-n
         xs[k + 1] = solver.y
         ts[k + 1] = solver.t
 
-        cost += running_cost(xs[k], us[k], k)
+        cs[k] = running_cost(xs[k], us[k], k)
 
     us[nstep] = us[nstep - 1]
 
-    cost += final_cost(xs[nstep])
+    cs[nstep] = final_cost(xs[nstep])
 
-    return ts, xs, us, cost
+    return ts, xs, us, cs 
 
 
 def plot_trajectory(xs):
