@@ -33,13 +33,15 @@ def _(mo, np):
         step=alpha_step,
         value=0.5,
         debounce=True,
-        label=r"$\alpha$",
+        label=r"$\alpha =$ ",
     )
 
     timestep = mo.ui.number(value=1e-2, debounce=True, label=r"$\Delta t$ [s]")
     nstep = mo.ui.number(start=1, step=1, value=500, debounce=True, label=r"$N$")
 
-    saturation_checkbox = mo.ui.checkbox(value=True, label=r"$u_{\min \& \max}$ [N]")
+    saturation_checkbox = mo.ui.checkbox(
+        value=True, label=r"$u_{\min \& \max}$ [N] $=$ "
+    )
     saturation_slider = mo.ui.range_slider(
         start=-10, stop=10, step=0.5, value=[0, 8], debounce=True
     )
@@ -83,21 +85,13 @@ def _(mo, nstep):
         step=1,
         value=20,
         debounce=True,
-        label=r"prediction horizon - $M$",
+        label=r"prediction horizon - $M =$ ",
     )
 
     return (
         controller_dropdown,
         mpc_horizon,
     )
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
-    ## Settings
-    """)
-    return
 
 
 @app.cell(hide_code=True)
@@ -141,11 +135,11 @@ def _(
             "Cost weights": mo.vstack(
                 [
                     mo.md(
-                        r"$Q = \alpha \, \operatorname{diag}(Q_0)$, where $Q_0$ = "
+                        r"$Q = \alpha \, \operatorname{diag}(Q_0)$, where $Q_0 =$ "
                         + f"{state_weights.tolist()}"
                     ),
                     mo.md(
-                        r"$R = (1 - \alpha) \, \operatorname{diag}(R_0)$, where $R_0$ = "
+                        r"$R = (1 - \alpha) \, \operatorname{diag}(R_0)$, where $R_0 =$ "
                         + f"{input_weights.tolist()}"
                     ),
                     alpha,
