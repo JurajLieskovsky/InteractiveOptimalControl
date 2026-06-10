@@ -12,9 +12,13 @@ def _():
 
     return mo, np, sim
 
+
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md("""# Infinite Horizon Regulation""")
+    mo.md("""
+    # Infinite Horizon Regulation
+    """)
+    return
 
 
 @app.cell
@@ -55,86 +59,89 @@ def _(mo, np):
         debounce=True,
         label=r"$q_t$",
     )
-
     return (
-        timestep,
-        nstep,
         alpha,
         initial_state,
         input_weights,
-        state_weights,
-        target_position,
+        nstep,
         saturation_checkbox,
         saturation_slider,
+        state_weights,
+        target_position,
+        timestep,
     )
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md("""## Settings""")
-
-
-@app.cell()
-def _(
-    mo,
-    nstep,
-    timestep,
-    alpha,
-    initial_state,
-    input_weights,
-    state_weights,
-    target_position,
-    saturation_checkbox,
-    saturation_slider,
-):
-        cond_saturation_slider = saturation_slider if saturation_checkbox.value else mo.Html(
-            '<div style="opacity: 0.3; pointer-events: none; user-select: none;">'
-            + saturation_slider._repr_html_()
-            + "</div>"
-        )
-
-        mo.accordion(
-        {
-            "Number of steps and timestep": mo.vstack([nstep, timestep]),
-            "Input saturation":
-                    mo.hstack(
-                        [saturation_checkbox, cond_saturation_slider],
-                        justify="start",
-                    ),
-            "Cost weights" : mo.vstack(
-                [
-                    mo.md(
-                        r"$Q = \alpha \, \operatorname{diag}(Q_0)$, where $Q_0$ = "
-                        + f"{state_weights.tolist()}"
-                    ),
-                    mo.md(
-                        r"$R = (1 - \alpha) \, \operatorname{diag}(R_0)$, where $R_0$ = "
-                        + f"{input_weights.tolist()}"
-                    ),
-                    alpha,
-                ]
-            ),
-            "Initial state and target position": mo.hstack(
-                [initial_state, target_position], justify="center"
-            ),
-        },
-        multiple=True,
-    )
+    mo.md("""
+    ## Settings
+    """)
+    return
 
 
 @app.cell
 def _(
-    np,
+    alpha,
     initial_state,
     input_weights,
+    mo,
     nstep,
+    saturation_checkbox,
+    saturation_slider,
+    state_weights,
+    target_position,
+    timestep,
+):
+    cond_saturation_slider = saturation_slider if saturation_checkbox.value else mo.Html(
+        '<div style="opacity: 0.3; pointer-events: none; user-select: none;">'
+        + saturation_slider._repr_html_()
+        + "</div>"
+    )
+
+    mo.accordion(
+    {
+        "Number of steps and timestep": mo.vstack([nstep, timestep]),
+        "Input saturation":
+                mo.hstack(
+                    [saturation_checkbox, cond_saturation_slider],
+                    justify="start",
+                ),
+        "Cost weights" : mo.vstack(
+            [
+                mo.md(
+                    r"$Q = \alpha \, \operatorname{diag}(Q_0)$, where $Q_0$ = "
+                    + f"{state_weights.tolist()}"
+                ),
+                mo.md(
+                    r"$R = (1 - \alpha) \, \operatorname{diag}(R_0)$, where $R_0$ = "
+                    + f"{input_weights.tolist()}"
+                ),
+                alpha,
+            ]
+        ),
+        "Initial state and target position": mo.hstack(
+            [initial_state, target_position], justify="center"
+        ),
+    },
+    multiple=True,
+        )
+    return
+
+
+@app.cell
+def _(
+    alpha,
+    initial_state,
+    input_weights,
+    np,
+    nstep,
+    saturation_checkbox,
+    saturation_slider,
     sim,
     state_weights,
     target_position,
-    alpha,
     timestep,
-    saturation_checkbox,
-    saturation_slider,
 ):
     x0 = np.array(initial_state.value)
     xt = np.array([target_position.value[0], target_position.value[1], 0, 0, 0, 0])
@@ -151,35 +158,40 @@ def _(
         u_max = np.inf
 
     lqr_controller = sim.LQR(xt, sim.u_eq, q, r, dt)
+    mpc_controller = sim.MPC(20, xt, sim.u_eq, q, r, dt, u_min, u_max)
 
     ts, xs, us = sim.simulate(
         nstep.value,
         dt,
         x0,
-        lqr_controller.input,
+        mpc_controller.input,
         u_min=u_min,
         u_max=u_max,
     )
-
-    return ts, us, xs, x0, xt
+    return ts, us, x0, xs, xt
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md("""## States and Inputs""")
+    mo.md("""
+    ## States and Inputs
+    """)
+    return
 
 
 @app.cell
 def plot(sim, ts, us, xs):
     fig2, _ = sim.plot_states_and_inputs(ts, xs, us)
     fig2
-
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md("""## Trajectory""")
+    mo.md("""
+    ## Trajectory
+    """)
+    return
 
 
 @app.cell
@@ -196,7 +208,6 @@ def _(sim, x0, xs, xt):
     ax1.set_ylim(-5, 5)
 
     fig1
-
     return
 
 
