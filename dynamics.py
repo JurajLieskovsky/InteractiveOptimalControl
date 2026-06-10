@@ -114,7 +114,7 @@ def input_saturation(u, u_min, u_max):
         return u
 
 
-def simulate(nstep, timestep, x0, controller, u_min=-np.inf, u_max=np.inf):
+def simulate(nstep, timestep, x0, controller, running_cost, u_min=-np.inf, u_max=np.inf):
     solver = scipy.integrate.ode(f)
     solver.set_integrator("dopri5")
     solver.set_initial_value(x0)
@@ -122,6 +122,8 @@ def simulate(nstep, timestep, x0, controller, u_min=-np.inf, u_max=np.inf):
     ts = np.zeros(nstep + 1)
     xs = [np.zeros(6) for _ in range(nstep + 1)]
     us = [np.zeros(2) for _ in range(nstep + 1)]
+
+    cost = 0
 
     ts[0] = 0.0
     xs[0] = solver.y
@@ -137,9 +139,13 @@ def simulate(nstep, timestep, x0, controller, u_min=-np.inf, u_max=np.inf):
         xs[k + 1] = solver.y
         ts[k + 1] = solver.t
 
+        cost += running_cost(xs[k], us[k], k)
+
     us[nstep] = us[nstep - 1]
 
-    return ts, xs, us
+    cost += running_cost(xs[nstep], us[nstep], nstep)
+
+    return ts, xs, us, cost
 
 
 def plot_trajectory(xs):
