@@ -23,10 +23,15 @@ class _LQR:
         self.P = scipy.linalg.solve_discrete_are(self.A, self.B, self.q, self.r)
 
     def running_cost(self, x, u, _):
-        return x.T @ self.q @ x + u.T @ self.r @ u
+        dx = x - self.x_eq
+        du = u - self.u_eq
+
+        return dx.T @ self.q @ dx + du.T @ self.r @ du
 
     def final_cost(self, x):
-        return x.T @ self.P @ x
+        dx = x - self.x_eq
+
+        return dx.T @ self.P @ dx
 
 
 class LQR(_LQR):
