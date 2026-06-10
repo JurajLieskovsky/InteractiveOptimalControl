@@ -194,7 +194,8 @@ def _(
         dt,
         x0,
         controller.input,
-        lambda x, u, _: x.T @ q @ x + u.T @ r @ u,
+        controller.running_cost,
+        controller.final_cost,
         u_min=u_min,
         u_max=u_max,
     )

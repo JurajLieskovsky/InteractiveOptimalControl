@@ -55,15 +55,24 @@ class LQR:
         self.x_eq = x_eq
         self.u_eq = u_eq
 
+        self.q = q
+        self.r = r
+
         dtA = np.eye(6) + dt * A
         dtB = dt * B
 
-        P = scipy.linalg.solve_discrete_are(dtA, dtB, q, r)
+        self.P = scipy.linalg.solve_discrete_are(dtA, dtB, self.q, self.r)
 
-        self.K = np.linalg.solve(r + dtB.T @ P @ dtB, dtB.T @ P @ dtA)
+        self.K = np.linalg.solve(r + dtB.T @ self.P @ dtB, dtB.T @ self.P @ dtA)
 
     def input(self, x, _):
         return self.u_eq - self.K @ (x - self.x_eq)
+
+    def running_cost(self, x, u, _):
+        return x.T @ self.q @ x + u.T @ self.r @ u
+
+    def final_cost(self, x):
+        return x.T @ self.P @ x
 
 
 class MPC:
@@ -71,10 +80,13 @@ class MPC:
         self.x_eq = x_eq
         self.u_eq = u_eq
 
+        self.q = q
+        self.r = r
+
         dtA = np.eye(6) + dt * A
         dtB = dt * B
 
-        infP = scipy.linalg.solve_discrete_are(dtA, dtB, q, r)
+        self.P = scipy.linalg.solve_discrete_are(dtA, dtB, q, r)
 
         self.x = cp.Variable((6, M + 1))
         self.u = cp.Variable((2, M))
@@ -88,22 +100,28 @@ class MPC:
             self.u <= u_max - u_eq[:, np.newaxis],
         ]
 
-        LQ = np.linalg.cholesky(q)
-        LR = np.linalg.cholesky(r)
+        LQ = np.linalg.cholesky(self.q)
+        LR = np.linalg.cholesky(self.r)
 
         objective = cp.Minimize(
             cp.sum_squares(LQ.T @ self.x[:, :-1])
             + cp.sum_squares(LR.T @ self.u)
-            + cp.quad_form(self.x[:, 10], infP)
+            + cp.quad_form(self.x[:, 10], self.P)
         )
 
         self.problem = cp.Problem(objective, constraints)
 
     def input(self, x, _):
         self.x_init.value = x - self.x_eq
-        self.problem.solve()
+        self.problem.solve(solver=cp.OSQP, warm_starting=True, polish=True)
 
-        return self.u_eq + self.u.value[:, 0]
+        return self.u_eq + self.u.value[:, 0]  # ty:ignore[not-subscriptable]
+
+    def running_cost(self, x, u, _):
+        return x.T @ self.q @ x + u.T @ self.r @ u
+
+    def final_cost(self, x):
+        return x.T @ self.P @ x
 
 def input_saturation(u, u_min, u_max):
     if u < u_min:
@@ -114,7 +132,7 @@ def input_saturation(u, u_min, u_max):
         return u
 
 
-def simulate(nstep, timestep, x0, controller, running_cost, u_min=-np.inf, u_max=np.inf):
+def simulate(nstep, timestep, x0, controller, running_cost, final_cost, u_min=-np.inf, u_max=np.inf):
     solver = scipy.integrate.ode(f)
     solver.set_integrator("dopri5")
     solver.set_initial_value(x0)
@@ -143,7 +161,7 @@ def simulate(nstep, timestep, x0, controller, running_cost, u_min=-np.inf, u_max
 
     us[nstep] = us[nstep - 1]
 
-    cost += running_cost(xs[nstep], us[nstep], nstep)
+    cost += final_cost(xs[nstep])
 
     return ts, xs, us, cost
 
