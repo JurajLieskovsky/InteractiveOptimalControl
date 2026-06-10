@@ -14,7 +14,7 @@ class _LQR:
         self.r = r
 
         assert all(abs(x_eq - dynamics.rk4_f(0, x_eq, u_eq, dt)) <= 1e-8)
-        
+
         self.A, self.B = dynamics.rk4_df(0, x_eq, u_eq, dt)
 
         self.P = scipy.linalg.solve_discrete_are(self.A, self.B, self.q, self.r)
@@ -44,11 +44,27 @@ class LQR(_LQR):
 
 
 class MPC(_LQR):
-    def __init__(self, M, x_eq, u_eq, q, r, dt, u_min=-np.inf, u_max=np.inf):
+    def __init__(
+        self,
+        M,
+        x_eq,
+        u_eq,
+        q,
+        r,
+        dt,
+        u_min=-np.inf,
+        u_max=np.inf,
+        h_min=-np.inf,
+        h_penalty=1e3,
+    ):
         super().__init__(x_eq, u_eq, q, r, dt)
+
+        self.h_min = h_min
+        self.h_penalty = h_penalty
 
         self.x = cp.Variable((6, M + 1))
         self.u = cp.Variable((2, M))
+        slack = cp.Variable(M + 1)
 
         self.x_init = cp.Parameter(6)
 
@@ -57,6 +73,8 @@ class MPC(_LQR):
             self.x[:, 0] == self.x_init,
             self.u >= u_min - u_eq[:, np.newaxis],
             self.u <= u_max - u_eq[:, np.newaxis],
+            self.x[1, :] + slack >= h_min - x_eq[1, np.newaxis],
+            slack >= 0,
         ]
 
         LQ = np.linalg.cholesky(self.q)
@@ -66,6 +84,7 @@ class MPC(_LQR):
             cp.sum_squares(LQ.T @ self.x[:, :-1])
             + cp.sum_squares(LR.T @ self.u)
             + cp.quad_form(self.x[:, 10], self.P)
+            + cp.sum(self.h_penalty * slack)
         )
 
         self.problem = cp.Problem(objective, constraints)

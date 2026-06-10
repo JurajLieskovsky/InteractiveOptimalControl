@@ -39,11 +39,24 @@ def _(mo, np):
     timestep = mo.ui.number(value=1e-2, debounce=True, label=r"$\Delta t$ [s]")
     nstep = mo.ui.number(start=1, step=1, value=600, debounce=True, label=r"$N$")
 
+    height_checkbox = mo.ui.checkbox(value=True, label="soft minimal height constraint")
+    height_constraint = mo.ui.number(
+        start=0, step=0.25, stop=5, value=0.25, debounce=True, label=r"- $h_{\min}$ [m] $=$ "
+    )
+    height_penalty = mo.ui.number(
+        start=0,
+        step=100,
+        stop=10000,
+        value=1000,
+        label=r"- height violation penalty - $\rho =$ ",
+        debounce=True,
+    )
+
     saturation_checkbox = mo.ui.checkbox(
         value=True, label=r"$u_{\min \& \max}$ [N] $=$ "
     )
     saturation_slider = mo.ui.range_slider(
-        start=-10, stop=10, step=0.5, value=[0, 8], debounce=True
+        start=-15, stop=15, step=1, value=[0, 8], debounce=True
     )
 
     initial_state = mo.ui.matrix(
@@ -56,10 +69,10 @@ def _(mo, np):
     )
 
     target_position = mo.ui.matrix(
-        np.zeros(2),
+        np.array([0, 0.25]),
         min_value=-5,
         max_value=5,
-        step=0.5,
+        step=0.25,
         debounce=True,
         label=r"$[x_t, y_t]$",
     )
@@ -73,11 +86,15 @@ def _(mo, np):
         state_weights,
         target_position,
         timestep,
+        height_checkbox,
+        height_constraint,
+        height_penalty,
     )
 
 
 @app.cell(hide_code=True)
 def _(mo, nstep):
+
     controller_dropdown = mo.ui.dropdown(options=["MPC", "LQR"], value="MPC")
     mpc_horizon = mo.ui.number(
         start=1,
@@ -87,6 +104,7 @@ def _(mo, nstep):
         debounce=True,
         label=r"prediction horizon - $M =$ ",
     )
+
     return controller_dropdown, mpc_horizon
 
 
@@ -104,6 +122,9 @@ def _(
     state_weights,
     target_position,
     timestep,
+    height_checkbox,
+    height_constraint,
+    height_penalty,
 ):
     cond_saturation_slider = (
         saturation_slider
@@ -115,19 +136,26 @@ def _(
         )
     )
 
-    cond_mpc_horizon = mpc_horizon if controller_dropdown.value == "MPC" else mo.md("")
+    if height_checkbox.value:
+        cond_height = mo.vstack(
+            [
+                height_checkbox,
+                height_constraint,
+                height_penalty,
+            ]
+        )
+    else:
+        cond_height = height_checkbox
+
+    cond_mpc = (
+        mo.vstack([mpc_horizon, cond_height])
+        if controller_dropdown.value == "MPC"
+        else mo.md("")
+    )
 
     mo.accordion(
         {
             "Number of steps and timestep length": mo.vstack([nstep, timestep]),
-            "Input saturation": mo.hstack(
-                [saturation_checkbox, cond_saturation_slider],
-                justify="start",
-            ),
-            "Controller": mo.hstack(
-                [controller_dropdown, cond_mpc_horizon],
-                justify="start",
-            ),
             "Cost weights": mo.vstack(
                 [
                     mo.md(
@@ -141,8 +169,16 @@ def _(
                     alpha,
                 ]
             ),
+            "Input saturation": mo.hstack(
+                [saturation_checkbox, cond_saturation_slider],
+                justify="start",
+            ),
             "Initial state and target position": mo.hstack(
                 [initial_state, target_position], justify="center"
+            ),
+            "Controller": mo.hstack(
+                [controller_dropdown, cond_mpc],
+                justify="start",
             ),
         },
         multiple=True,
@@ -165,6 +201,9 @@ def _(
     state_weights,
     target_position,
     timestep,
+    height_checkbox,
+    height_constraint,
+    height_penalty,
 ):
     x0 = np.array(initial_state.value)
     xt = np.array([target_position.value[0], target_position.value[1], 0, 0, 0, 0])
@@ -180,9 +219,23 @@ def _(
         u_min = -np.inf
         u_max = np.inf
 
+    if height_checkbox.value:
+        h_min = height_constraint.value
+    else:
+        h_min = -np.inf
+
     if controller_dropdown.value == "MPC":
         controller = birotor.infinite_horizon_regulators.MPC(
-            mpc_horizon.value, xt, birotor.dynamics.u_eq, q, r, dt, u_min, u_max
+            mpc_horizon.value,
+            xt,
+            birotor.dynamics.u_eq,
+            q,
+            r,
+            dt,
+            u_min,
+            u_max,
+            h_min,
+            height_penalty.value,
         )
     elif controller_dropdown.value == "LQR":
         controller = birotor.infinite_horizon_regulators.LQR(
@@ -241,7 +294,7 @@ def _(birotor, x0, xs, xt):
     ax1.legend()
 
     ax1.set_xlim(-5, 5)
-    ax1.set_ylim(-5, 5)
+    ax1.set_ylim(-0.5, 5)
 
     fig1
     return

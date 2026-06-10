@@ -63,6 +63,8 @@ def plot_trajectory(xs):
     ax.set_xlabel(r"$x$ [m]")
     ax.set_ylabel(r"$y$ [m]")
 
+    ax.hlines([0], xmin=-5, xmax=5, linestyles="dashed", color="k")
+
     return fig, ax
 
 
