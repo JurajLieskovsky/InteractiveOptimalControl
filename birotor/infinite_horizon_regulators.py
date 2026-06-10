@@ -4,6 +4,7 @@ import cvxpy as cp
 
 from . import dynamics
 
+
 class _LQR:
     def __init__(self, x_eq, u_eq, q, r, dt):
         self.x_eq = x_eq
@@ -12,8 +13,12 @@ class _LQR:
         self.q = q
         self.r = r
 
-        self.A = np.eye(6) + dt * dynamics.A
-        self.B = dt * dynamics.B
+        assert all(abs(dynamics.f(0, x_eq, u_eq)) <= 1e-7)
+        
+        ctA, ctB = dynamics.df(0, x_eq, u_eq)
+
+        self.A = np.eye(6) + dt * ctA
+        self.B = dt * ctB
 
         self.P = scipy.linalg.solve_discrete_are(self.A, self.B, self.q, self.r)
 
@@ -68,5 +73,3 @@ class MPC(_LQR):
         self.problem.solve(solver=cp.OSQP, warm_starting=True, polish=True)
 
         return self.u_eq + self.u.value[:, 0]  # ty:ignore[not-subscriptable]
-
-

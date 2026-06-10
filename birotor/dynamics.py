@@ -1,4 +1,5 @@
-import numpy as np
+import jax
+import jax.numpy as np
 
 g = 9.81
 mass = 1
@@ -6,8 +7,12 @@ moi = 1
 arm = 0.1
 
 
+# equilibrium input
+u_eq = mass * g / 2 * np.ones(2)
+
+
 # nonlinear continuous-time dynamics
-def f(t, x, u):
+def f(_, x, u):
     return np.array(
         [
             x[3],
@@ -20,28 +25,6 @@ def f(t, x, u):
     )
 
 
-# equilibrium input
-u_eq = mass * g / 2 * np.ones(2)
-
-# linearized continuous-time dynamics
-A = np.array(
-    [
-        [0, 0, 0, 1, 0, 0],
-        [0, 0, 0, 0, 1, 0],
-        [0, 0, 0, 0, 0, 1],
-        [0, 0, -g, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0],
-    ]
-)
-
-B = np.array(
-    [
-        [0, 0],
-        [0, 0],
-        [0, 0],
-        [0, 0],
-        [1 / mass, 1 / mass],
-        [arm / moi, -arm / moi],
-    ]
-)
+# differentiation function
+def df(t, x, u):
+    return jax.jacobian(f, argnums=(1, 2))(t, x, u)
