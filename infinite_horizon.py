@@ -10,7 +10,7 @@ def _():
     import numpy as np
     import birotor
 
-    return mo, np, birotor
+    return birotor, mo, np
 
 
 @app.cell(hide_code=True)
@@ -37,7 +37,7 @@ def _(mo, np):
     )
 
     timestep = mo.ui.number(value=1e-2, debounce=True, label=r"$\Delta t$ [s]")
-    nstep = mo.ui.number(start=1, step=1, value=500, debounce=True, label=r"$N$")
+    nstep = mo.ui.number(start=1, step=1, value=600, debounce=True, label=r"$N$")
 
     saturation_checkbox = mo.ui.checkbox(
         value=True, label=r"$u_{\min \& \max}$ [N] $=$ "
@@ -87,27 +87,23 @@ def _(mo, nstep):
         debounce=True,
         label=r"prediction horizon - $M =$ ",
     )
-
-    return (
-        controller_dropdown,
-        mpc_horizon,
-    )
+    return controller_dropdown, mpc_horizon
 
 
 @app.cell(hide_code=True)
 def _(
     alpha,
+    controller_dropdown,
     initial_state,
     input_weights,
     mo,
+    mpc_horizon,
     nstep,
     saturation_checkbox,
     saturation_slider,
     state_weights,
     target_position,
     timestep,
-    controller_dropdown,
-    mpc_horizon,
 ):
     cond_saturation_slider = (
         saturation_slider
@@ -157,18 +153,18 @@ def _(
 @app.cell
 def _(
     alpha,
+    birotor,
+    controller_dropdown,
     initial_state,
     input_weights,
+    mpc_horizon,
     np,
     nstep,
     saturation_checkbox,
     saturation_slider,
-    birotor,
     state_weights,
     target_position,
     timestep,
-    controller_dropdown,
-    mpc_horizon,
 ):
     x0 = np.array(initial_state.value)
     xt = np.array([target_position.value[0], target_position.value[1], 0, 0, 0, 0])
@@ -205,8 +201,7 @@ def _(
     )
 
     cs *= dt
-
-    return ts, us, xs, x0, xt, cs
+    return cs, ts, us, x0, xs, xt
 
 
 @app.cell(hide_code=True)
@@ -218,7 +213,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def plot(np, birotor, ts, us, xs, cs):
+def plot(birotor, cs, np, ts, us, xs):
     fig2, _ = birotor.simulation.plot_states_and_inputs(ts, xs, us)
     fig2.suptitle(
         f"Cost = {np.sum(cs):.2f} ({np.sum(cs[:-1]):.2f} + {np.sum(cs[-1]):.2f})"
