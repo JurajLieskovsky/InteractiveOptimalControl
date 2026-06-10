@@ -8,9 +8,9 @@ app = marimo.App()
 def _():
     import marimo as mo
     import numpy as np
-    import dynamics as sim
+    import birotor
 
-    return mo, np, sim
+    return mo, np, birotor
 
 
 @app.cell(hide_code=True)
@@ -163,7 +163,7 @@ def _(
     nstep,
     saturation_checkbox,
     saturation_slider,
-    sim,
+    birotor,
     state_weights,
     target_position,
     timestep,
@@ -185,11 +185,11 @@ def _(
         u_max = np.inf
 
     if controller_dropdown.value == "MPC":
-        controller = sim.MPC(mpc_horizon.value, xt, sim.u_eq, q, r, dt, u_min, u_max)
+        controller = birotor.regulators.MPC(mpc_horizon.value, xt, birotor.dynamics.u_eq, q, r, dt, u_min, u_max)
     elif controller_dropdown.value == "LQR":
-        controller = sim.LQR(xt, sim.u_eq, q, r, dt)
+        controller = birotor.regulators.LQR(xt, birotor.dynamics.u_eq, q, r, dt)
 
-    ts, xs, us, cs = sim.simulate(
+    ts, xs, us, cs = birotor.simulation.simulate(
         nstep.value,
         dt,
         x0,
@@ -214,8 +214,8 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def plot(np, sim, ts, us, xs, cs):
-    fig2, _ = sim.plot_states_and_inputs(ts, xs, us)
+def plot(np, birotor, ts, us, xs, cs):
+    fig2, _ = birotor.simulation.plot_states_and_inputs(ts, xs, us)
     fig2.suptitle(
         f"Cost = {np.sum(cs):.2f} ({np.sum(cs[:-1]):.2f} + {np.sum(cs[-1]):.2f})"
     )
@@ -232,9 +232,9 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(sim, x0, xs, xt):
+def _(birotor, x0, xs, xt):
 
-    fig1, ax1 = sim.plot_trajectory(xs)
+    fig1, ax1 = birotor.simulation.plot_trajectory(xs)
 
     ax1.scatter(x0[0], x0[1], label="initial")
     ax1.scatter(xt[0], xt[1], label="target")
