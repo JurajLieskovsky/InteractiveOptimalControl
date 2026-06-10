@@ -13,12 +13,9 @@ class _LQR:
         self.q = q
         self.r = r
 
-        assert all(abs(dynamics.f(0, x_eq, u_eq)) <= 1e-7)
+        assert all(abs(x_eq - dynamics.rk4_f(0, x_eq, u_eq, dt)) <= 1e-8)
         
-        ctA, ctB = dynamics.df(0, x_eq, u_eq)
-
-        self.A = np.eye(6) + dt * ctA
-        self.B = dt * ctB
+        self.A, self.B = dynamics.rk4_df(0, x_eq, u_eq, dt)
 
         self.P = scipy.linalg.solve_discrete_are(self.A, self.B, self.q, self.r)
 
