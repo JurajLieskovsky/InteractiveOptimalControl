@@ -52,7 +52,7 @@ def _(mo, np):
         max_value=5,
         step=0.5,
         debounce=True,
-        label=r"$x_0$",
+        label=r"$\vec{x}_0$",
     )
 
     target_position = mo.ui.matrix(
@@ -61,7 +61,7 @@ def _(mo, np):
         max_value=5,
         step=0.5,
         debounce=True,
-        label=r"$q_t$",
+        label=r"$[x_t, y_t]$",
     )
     return (
         alpha,
@@ -185,9 +185,13 @@ def _(
         u_max = np.inf
 
     if controller_dropdown.value == "MPC":
-        controller = birotor.regulators.MPC(mpc_horizon.value, xt, birotor.dynamics.u_eq, q, r, dt, u_min, u_max)
+        controller = birotor.infinite_horizon_regulators.MPC(
+            mpc_horizon.value, xt, birotor.dynamics.u_eq, q, r, dt, u_min, u_max
+        )
     elif controller_dropdown.value == "LQR":
-        controller = birotor.regulators.LQR(xt, birotor.dynamics.u_eq, q, r, dt)
+        controller = birotor.infinite_horizon_regulators.LQR(
+            xt, birotor.dynamics.u_eq, q, r, dt
+        )
 
     ts, xs, us, cs = birotor.simulation.simulate(
         nstep.value,
