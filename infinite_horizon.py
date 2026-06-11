@@ -11,7 +11,7 @@ def _():
     import birotor
     import matplotlib
 
-    return birotor, mo, np, matplotlib
+    return birotor, matplotlib, mo, np
 
 
 @app.cell(hide_code=True)
@@ -28,7 +28,7 @@ def _(mo):
     J = \sum_{k=0}^\infty x_k^T Q x_k + u_k^T R u_k
     $$
     based on which it calculates:
-    - value function $V(x_k) = x_k^T P x_k$ (infinite horizon), 
+    - value function $V(x_k) = x_k^T P x_k$ (infinite horizon),
     - feedback policy $\Pi(x_k) = u_{eq} - K (x_k - x_{eq})$.
 
     The MPC controller extends this problem by additionally considering hard constraints on $u_L$, $u_R$ and soft constraints on $y$, $z$ on a finite horizon. In full, its optimization problem can be stated as
@@ -41,9 +41,9 @@ def _(mo):
     & z_{\min} \leq z_k \leq z_{\max},\quad k \in [0,\ldots,N] \quad \text{(soft)}.
     \end{aligned}
     $$
-    The soft constraints are achieved by adding non-negative slack variables, penalized using an L1 norm that is scaled by a penalty parameter $\rho$. If $\rho$ is sufficiently large the penalty is exact (i.e, when feasible, the solution satisfies the constraints exactly).
+    The soft constraints are achieved by adding slack variables, penalized using an L1 norm that is scaled by a penalty parameter $\rho$. If the parameter $\rho$ is sufficiently large the penalty is exact (i.e, when feasible, the solution satisfies the constraints exactly).
 
-    Input constraints can also be enabled for the LQR controller. However, in this case they simply clip the calculated inputs. 
+    The dynamics of the simulated system are nonlinear and a process noise in the form of a force acting in the direction of the $y$-axis can be added. Input constraints can not only be enabled for MPC but also LQR. However, in this case they simply clip the calculated inputs.
     """)
     return
 
@@ -66,13 +66,18 @@ def _(mo, np):
     timestep = mo.ui.number(value=1e-2, debounce=True, label=r"$\Delta t\ [\text{s}]$")
     nstep = mo.ui.number(start=1, step=1, value=600, debounce=True, label=r"$N$")
 
+    noise_checkbox = mo.ui.checkbox(value=False, label="Process noise")
+    noise_scale = mo.ui.number(
+        start=-2, stop=2, step=1, value=0, label="- scale - 1e"
+    )
+
     pos_checkbox = mo.ui.checkbox(value=True, label="soft position constraints")
     pos_penalty = mo.ui.number(
         start=0,
-        step=100,
-        stop=10000,
-        value=1000,
-        label=r"- penalty parameter - $\rho\ [1/\text{m}] =$ ",
+        stop=6,
+        step=1,
+        value=3,
+        label=r"- penalty parameter - $\rho\ [1/\text{m}] =$ 1e",
         debounce=True,
     )
 
@@ -105,20 +110,21 @@ def _(mo, np):
     )
 
     controller_dropdown = mo.ui.dropdown(options=["MPC", "LQR"], value="MPC")
-
     return (
         alpha,
+        controller_dropdown,
         initial_state,
         input_weights,
+        noise_checkbox,
+        noise_scale,
         nstep,
+        pos_checkbox,
+        pos_penalty,
         saturation_checkbox,
         saturation_slider,
         state_weights,
         target_position,
         timestep,
-        pos_checkbox,
-        pos_penalty,
-        controller_dropdown,
     )
 
 
@@ -133,8 +139,8 @@ def _(mo, nstep):
         debounce=True,
         label=r"prediction horizon - $M =$ ",
     )
+    return (mpc_horizon,)
 
-    return mpc_horizon
 
 @app.cell(hide_code=True)
 def _(mo):
@@ -142,6 +148,7 @@ def _(mo):
     ## Settings
     """)
     return
+
 
 @app.cell(hide_code=True)
 def _(
@@ -151,14 +158,16 @@ def _(
     input_weights,
     mo,
     mpc_horizon,
+    noise_checkbox,
+    noise_scale,
     nstep,
+    pos_checkbox,
+    pos_penalty,
     saturation_checkbox,
     saturation_slider,
     state_weights,
     target_position,
     timestep,
-    pos_checkbox,
-    pos_penalty,
 ):
     if saturation_checkbox.value:
         cond_saturation = mo.vstack(
@@ -166,6 +175,11 @@ def _(
         )
     else:
         cond_saturation = saturation_checkbox
+
+    if noise_checkbox.value:
+        cond_noise = mo.vstack([noise_checkbox, noise_scale], justify="start")
+    else:
+        cond_noise = noise_checkbox
 
     if pos_checkbox.value:
         cond_pos = mo.vstack(
@@ -184,7 +198,12 @@ def _(
 
     mo.accordion(
         {
-            "Number of steps and timestep length": mo.vstack([nstep, timestep]),
+            "Simulation (number of steps, timestep length, process noise)": mo.vstack(
+                [nstep, timestep, cond_noise]
+            ),
+            "Initial state and target position": mo.hstack(
+                [initial_state, target_position], justify="center"
+            ),
             "Cost weights": mo.vstack(
                 [
                     mo.md(
@@ -198,9 +217,6 @@ def _(
                     ),
                     alpha,
                 ]
-            ),
-            "Initial state and target position": mo.hstack(
-                [initial_state, target_position], justify="center"
             ),
             "Controller": mo.vstack(
                 [
@@ -224,15 +240,17 @@ def _(
     initial_state,
     input_weights,
     mpc_horizon,
+    noise_checkbox,
+    noise_scale,
     np,
     nstep,
+    pos_checkbox,
+    pos_penalty,
     saturation_checkbox,
     saturation_slider,
     state_weights,
     target_position,
     timestep,
-    pos_checkbox,
-    pos_penalty,
 ):
     x0 = np.array(initial_state.value)
     xt = np.array([target_position.value[0], target_position.value[1], 0, 0, 0, 0.0])
@@ -247,6 +265,11 @@ def _(
     else:
         u_min = -np.inf
         u_max = np.inf
+
+    if noise_checkbox.value:
+        w_scale = 10**noise_scale.value
+    else:
+        w_scale = 0
 
     if pos_checkbox.value:
         pos_min = np.array([-5.0, 1])
@@ -267,7 +290,7 @@ def _(
             u_max,
             pos_min,
             pos_max,
-            pos_penalty.value,
+            10**pos_penalty.value,
         )
     elif controller_dropdown.value == "LQR":
         controller = birotor.infinite_horizon_regulators.LQR(
@@ -283,10 +306,11 @@ def _(
         controller.final_cost,
         u_min=u_min,
         u_max=u_max,
+        w_scale=w_scale,
     )
 
     cs *= dt
-    return cs, ts, us, x0, xs, xt
+    return ts, us, x0, xs, xt
 
 
 @app.cell(hide_code=True)
@@ -306,7 +330,9 @@ def _(birotor, matplotlib, x0, xs, xt):
     ax1.scatter(xt[0], xt[1], label="target")
 
     ax1.add_patch(
-        matplotlib.patches.Rectangle((-5, 1), 10, 5, fill=False, linestyle="--", label="constraints")
+        matplotlib.patches.Rectangle(
+            (-5, 1), 10, 5, fill=False, linestyle="--", label="constraints"
+        )
     )
 
     ax1.legend()

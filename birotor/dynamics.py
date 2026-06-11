@@ -12,13 +12,13 @@ u_eq = mass * g / 2 * np.ones(2)
 
 
 # continuous-time dynamics
-def f(_, x, u):
+def f(_, x, u, w=0):
     return np.array(
         [
             x[3],
             x[4],
             x[5],
-            -np.sin(x[2]) * (u[0] + u[1]) / mass,
+            -np.sin(x[2]) * (u[0] + u[1]) / mass + w,
             np.cos(x[2]) * (u[0] + u[1]) / mass - g,
             arm * (u[0] - u[1]) / moi,
         ]

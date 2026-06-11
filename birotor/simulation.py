@@ -1,6 +1,5 @@
 import scipy
 import numpy as np
-import matplotlib.patches
 import matplotlib.pyplot as plt
 
 from . import dynamics
@@ -24,6 +23,7 @@ def simulate(
     final_cost,
     u_min=-np.inf,
     u_max=np.inf,
+    w_scale=0
 ):
     solver = scipy.integrate.ode(dynamics.f)
     solver.set_integrator("dopri5")
@@ -41,7 +41,7 @@ def simulate(
         u = np.array(
             [input_saturation(input, u_min, u_max) for input in controller(solver.y, k)]
         )
-        solver.set_f_params(u)
+        solver.set_f_params(u, np.random.normal(0.0, w_scale))
         solver.integrate(solver.t + timestep)
 
         us[k] = u
