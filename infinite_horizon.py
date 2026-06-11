@@ -253,20 +253,6 @@ def _(
     return cs, ts, us, x0, xs, xt
 
 
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
-    ## States and Inputs
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def plot(birotor, ts, us, xs):
-    fig2, _ = birotor.simulation.plot_states_and_inputs(ts, xs, us)
-    fig2
-    return
-
 
 @app.cell(hide_code=True)
 def _(mo):
@@ -292,6 +278,20 @@ def _(birotor, x0, xs, xt):
     fig1
     return
 
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    ## States and Inputs
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def plot(birotor, ts, us, xs):
+    fig2, _ = birotor.simulation.plot_states_and_inputs(ts, xs, us)
+    fig2
+    return
 
 if __name__ == "__main__":
     app.run()
