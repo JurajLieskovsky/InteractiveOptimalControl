@@ -67,10 +67,6 @@ def plot_trajectory(xs):
 
     ax.set_aspect('equal')
 
-    ax.add_patch(
-        matplotlib.patches.Rectangle((-5, 0), 10, 5, fill=False, edgecolor="k")
-    )
-
     return fig, ax
 
 

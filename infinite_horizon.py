@@ -9,8 +9,9 @@ def _():
     import marimo as mo
     import numpy as np
     import birotor
+    import matplotlib
 
-    return birotor, mo, np
+    return birotor, mo, np, matplotlib
 
 
 @app.cell(hide_code=True)
@@ -36,7 +37,7 @@ def _(mo, np):
         label=r"$\alpha =$ ",
     )
 
-    timestep = mo.ui.number(value=1e-2, debounce=True, label=r"$\Delta t$ [s]")
+    timestep = mo.ui.number(value=1e-2, debounce=True, label=r"$\Delta t\ [\text{s}]$")
     nstep = mo.ui.number(start=1, step=1, value=600, debounce=True, label=r"$N$")
 
     pos_checkbox = mo.ui.checkbox(value=True, label="soft position constraints")
@@ -45,34 +46,40 @@ def _(mo, np):
         step=100,
         stop=10000,
         value=1000,
-        label=r"- violation penalty - $\rho =$ ",
+        label=r"- penalty parameter - $\rho\ [1/\text{m}] =$ ",
         debounce=True,
     )
 
-    saturation_checkbox = mo.ui.checkbox(
-        value=True, label=r"$u_{\min \& \max}$ [N] $=$ "
-    )
+    saturation_checkbox = mo.ui.checkbox(value=True, label=r"Input saturation")
     saturation_slider = mo.ui.range_slider(
-        start=-15, stop=15, step=1, value=[0, 8], debounce=True
+        start=-15,
+        stop=15,
+        step=1,
+        value=[0, 8],
+        debounce=True,
+        label=r"- $u_{\min \& \max}\ [\text{N}] =$ ",
     )
 
     initial_state = mo.ui.matrix(
-        np.array([3.5, 4, 0, 0, 0, 0]),
-        min_value=[-5, 0, -2*np.pi, -100, -100, -100],
-        max_value=[5, 5, 2*np.pi, 100, 100, 100],
+        np.array([3.5, 5, 0, 0, 0, 0]),
+        min_value=[-5, 1, -2 * np.pi, -100, -100, -100],
+        max_value=[5, 6, 2 * np.pi, 100, 100, 100],
         step=0.5,
         debounce=True,
         label=r"$\vec{x}_0$",
     )
 
     target_position = mo.ui.matrix(
-        np.array([0.0, 0.25]),
-        min_value=[-5, 0],
-        max_value=[5, 5],
+        np.array([0.0, 1.25]),
+        min_value=[-5, 1],
+        max_value=[5, 6],
         step=0.25,
         debounce=True,
         label=r"$[x_t, y_t]$",
     )
+
+    controller_dropdown = mo.ui.dropdown(options=["MPC", "LQR"], value="MPC")
+
     return (
         alpha,
         initial_state,
@@ -85,13 +92,13 @@ def _(mo, np):
         timestep,
         pos_checkbox,
         pos_penalty,
+        controller_dropdown,
     )
 
 
 @app.cell(hide_code=True)
 def _(mo, nstep):
 
-    controller_dropdown = mo.ui.dropdown(options=["MPC", "LQR"], value="MPC")
     mpc_horizon = mo.ui.number(
         start=1,
         stop=nstep.value,
@@ -101,7 +108,7 @@ def _(mo, nstep):
         label=r"prediction horizon - $M =$ ",
     )
 
-    return controller_dropdown, mpc_horizon
+    return mpc_horizon
 
 
 @app.cell(hide_code=True)
@@ -121,31 +128,30 @@ def _(
     pos_checkbox,
     pos_penalty,
 ):
-    cond_saturation_slider = (
-        saturation_slider
-        if saturation_checkbox.value
-        else mo.Html(
-            '<div style="opacity: 0.3; pointer-events: none; user-select: none;">'
-            + saturation_slider._repr_html_()
-            + "</div>"
+    if saturation_checkbox.value:
+        cond_saturation = mo.vstack(
+            [saturation_checkbox, saturation_slider], justify="start"
         )
-    )
+    else:
+        cond_saturation = saturation_checkbox
 
     if pos_checkbox.value:
-        cond_height = mo.vstack(
+        cond_pos = mo.vstack(
             [
                 pos_checkbox,
                 pos_penalty,
+                mo.md(
+                    r"- if $\rho$ is sufficiently large the penalty is exact (i.e, when feasible, the solution satisfies the hard constraints)"
+                ),
             ]
         )
     else:
-        cond_height = pos_checkbox
+        cond_pos = pos_checkbox
 
-    cond_mpc = (
-        mo.vstack([mpc_horizon, cond_height])
-        if controller_dropdown.value == "MPC"
-        else mo.md("")
-    )
+    if controller_dropdown.value == "MPC":
+        controller_settings = mo.vstack([mpc_horizon, cond_saturation, cond_pos])
+    elif controller_dropdown.value == "LQR":
+        controller_settings = cond_saturation
 
     mo.accordion(
         {
@@ -153,26 +159,27 @@ def _(
             "Cost weights": mo.vstack(
                 [
                     mo.md(
-                        r"$Q = \alpha \, \operatorname{diag}(Q_0)$, where $Q_0 =$ "
+                        r"$Q = \alpha \, \operatorname{diag}(Q_0),\quad Q_0 =$ "
                         + f"{state_weights.tolist()}"
+                        # + r" $[1/\text{m}^2, 1/\text{m}^2, 1/\text{rad}^2, \text{s}^2/\text{m}^2, \text{s}^2/\text{m}^2, \text{s}^2/\text{rad}^2]$"
                     ),
                     mo.md(
-                        r"$R = (1 - \alpha) \, \operatorname{diag}(R_0)$, where $R_0 =$ "
+                        r"$R = (1 - \alpha) \, \operatorname{diag}(R_0)\ [1/\text{N}^2],\quad R_0 =$ "
                         + f"{input_weights.tolist()}"
                     ),
                     alpha,
                 ]
             ),
-            "Input saturation": mo.hstack(
-                [saturation_checkbox, cond_saturation_slider],
-                justify="start",
-            ),
             "Initial state and target position": mo.hstack(
                 [initial_state, target_position], justify="center"
             ),
-            "Controller": mo.hstack(
-                [controller_dropdown, cond_mpc],
-                justify="start",
+            "Controller": mo.vstack(
+                [
+                    mo.hstack(
+                        [controller_dropdown, mo.md(": "), controller_settings],
+                        justify="start",
+                    ),
+                ]
             ),
         },
         multiple=True,
@@ -213,8 +220,8 @@ def _(
         u_max = np.inf
 
     if pos_checkbox.value:
-        pos_min = np.array([-5.0, 0])
-        pos_max = np.array([5.0, 5])
+        pos_min = np.array([-5.0, 1])
+        pos_max = np.array([5.0, 6])
     else:
         pos_min = -np.inf * np.ones(2)
         pos_max = np.inf * np.ones(2)
@@ -253,7 +260,6 @@ def _(
     return cs, ts, us, x0, xs, xt
 
 
-
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
@@ -263,17 +269,21 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(birotor, x0, xs, xt):
+def _(birotor, matplotlib, x0, xs, xt):
 
     fig1, ax1 = birotor.simulation.plot_trajectory(xs)
 
     ax1.scatter(x0[0], x0[1], label="initial")
     ax1.scatter(xt[0], xt[1], label="target")
 
+    ax1.add_patch(
+        matplotlib.patches.Rectangle((-5, 1), 10, 5, fill=False, linestyle="--", label="constraint")
+    )
+
     ax1.legend()
 
     ax1.set_xlim(-5.5, 5.5)
-    ax1.set_ylim(-0.5, 5.5)
+    ax1.set_ylim(0.0, 6.5)
 
     fig1
     return
@@ -292,6 +302,7 @@ def plot(birotor, ts, us, xs):
     fig2, _ = birotor.simulation.plot_states_and_inputs(ts, xs, us)
     fig2
     return
+
 
 if __name__ == "__main__":
     app.run()
