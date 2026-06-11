@@ -1,3 +1,13 @@
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#   "numpy",
+#   "matplotlib",
+#   "birotor @ git+https://github.com/JurajLieskovsky/BirotorOptimalControl.git",
+#   "marimo>=0.23.9",
+# ]
+# ///
+
 import marimo
 
 __generated_with = "0.23.9"
