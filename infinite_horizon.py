@@ -39,16 +39,13 @@ def _(mo, np):
     timestep = mo.ui.number(value=1e-2, debounce=True, label=r"$\Delta t$ [s]")
     nstep = mo.ui.number(start=1, step=1, value=600, debounce=True, label=r"$N$")
 
-    height_checkbox = mo.ui.checkbox(value=True, label="soft minimal height constraint")
-    height_constraint = mo.ui.number(
-        start=0, step=0.25, stop=5, value=0.25, debounce=True, label=r"- $h_{\min}$ [m] $=$ "
-    )
-    height_penalty = mo.ui.number(
+    pos_checkbox = mo.ui.checkbox(value=True, label="soft position constraints")
+    pos_penalty = mo.ui.number(
         start=0,
         step=100,
         stop=10000,
         value=1000,
-        label=r"- height violation penalty - $\rho =$ ",
+        label=r"- violation penalty - $\rho =$ ",
         debounce=True,
     )
 
@@ -60,18 +57,18 @@ def _(mo, np):
     )
 
     initial_state = mo.ui.matrix(
-        np.array([3, 4, 0, 0, 0, 0]),
-        min_value=-5,
-        max_value=5,
+        np.array([3.5, 4, 0, 0, 0, 0]),
+        min_value=[-5, 0, -2*np.pi, -100, -100, -100],
+        max_value=[5, 5, 2*np.pi, 100, 100, 100],
         step=0.5,
         debounce=True,
         label=r"$\vec{x}_0$",
     )
 
     target_position = mo.ui.matrix(
-        np.array([0, 0.25]),
-        min_value=-5,
-        max_value=5,
+        np.array([0.0, 0.25]),
+        min_value=[-5, 0],
+        max_value=[5, 5],
         step=0.25,
         debounce=True,
         label=r"$[x_t, y_t]$",
@@ -86,9 +83,8 @@ def _(mo, np):
         state_weights,
         target_position,
         timestep,
-        height_checkbox,
-        height_constraint,
-        height_penalty,
+        pos_checkbox,
+        pos_penalty,
     )
 
 
@@ -122,9 +118,8 @@ def _(
     state_weights,
     target_position,
     timestep,
-    height_checkbox,
-    height_constraint,
-    height_penalty,
+    pos_checkbox,
+    pos_penalty,
 ):
     cond_saturation_slider = (
         saturation_slider
@@ -136,16 +131,15 @@ def _(
         )
     )
 
-    if height_checkbox.value:
+    if pos_checkbox.value:
         cond_height = mo.vstack(
             [
-                height_checkbox,
-                height_constraint,
-                height_penalty,
+                pos_checkbox,
+                pos_penalty,
             ]
         )
     else:
-        cond_height = height_checkbox
+        cond_height = pos_checkbox
 
     cond_mpc = (
         mo.vstack([mpc_horizon, cond_height])
@@ -201,12 +195,11 @@ def _(
     state_weights,
     target_position,
     timestep,
-    height_checkbox,
-    height_constraint,
-    height_penalty,
+    pos_checkbox,
+    pos_penalty,
 ):
     x0 = np.array(initial_state.value)
-    xt = np.array([target_position.value[0], target_position.value[1], 0, 0, 0, 0])
+    xt = np.array([target_position.value[0], target_position.value[1], 0, 0, 0, 0.0])
 
     q = alpha.value * np.diag(state_weights)
     r = (1 - alpha.value) * np.diag(input_weights)
@@ -219,10 +212,12 @@ def _(
         u_min = -np.inf
         u_max = np.inf
 
-    if height_checkbox.value:
-        h_min = height_constraint.value
+    if pos_checkbox.value:
+        pos_min = np.array([-5.0, 0])
+        pos_max = np.array([5.0, 5])
     else:
-        h_min = -np.inf
+        pos_min = -np.inf * np.ones(2)
+        pos_max = np.inf * np.ones(2)
 
     if controller_dropdown.value == "MPC":
         controller = birotor.infinite_horizon_regulators.MPC(
@@ -234,8 +229,9 @@ def _(
             dt,
             u_min,
             u_max,
-            h_min,
-            height_penalty.value,
+            pos_min,
+            pos_max,
+            pos_penalty.value,
         )
     elif controller_dropdown.value == "LQR":
         controller = birotor.infinite_horizon_regulators.LQR(
@@ -266,11 +262,8 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def plot(birotor, cs, np, ts, us, xs):
+def plot(birotor, ts, us, xs):
     fig2, _ = birotor.simulation.plot_states_and_inputs(ts, xs, us)
-    fig2.suptitle(
-        f"Cost = {np.sum(cs):.2f} ({np.sum(cs[:-1]):.2f} + {np.sum(cs[-1]):.2f})"
-    )
     fig2
     return
 
@@ -293,8 +286,8 @@ def _(birotor, x0, xs, xt):
 
     ax1.legend()
 
-    ax1.set_xlim(-5, 5)
-    ax1.set_ylim(-0.5, 5)
+    ax1.set_xlim(-5.5, 5.5)
+    ax1.set_ylim(-0.5, 5.5)
 
     fig1
     return

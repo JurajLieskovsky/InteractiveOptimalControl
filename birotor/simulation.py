@@ -1,8 +1,10 @@
 import scipy
 import numpy as np
+import matplotlib.patches
 import matplotlib.pyplot as plt
 
 from . import dynamics
+
 
 def input_saturation(u, u_min, u_max):
     if u < u_min:
@@ -63,7 +65,11 @@ def plot_trajectory(xs):
     ax.set_xlabel(r"$x$ [m]")
     ax.set_ylabel(r"$y$ [m]")
 
-    ax.hlines([0], xmin=-5, xmax=5, linestyles="dashed", color="k")
+    ax.set_aspect('equal')
+
+    ax.add_patch(
+        matplotlib.patches.Rectangle((-5, 0), 10, 5, fill=False, edgecolor="k")
+    )
 
     return fig, ax
 
@@ -100,4 +106,3 @@ def plot_states_and_inputs(ts, xs, us):
     ax[2].legend()
 
     return fig, ax
-

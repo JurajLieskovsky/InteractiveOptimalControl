@@ -54,17 +54,17 @@ class MPC(_LQR):
         dt,
         u_min=-np.inf,
         u_max=np.inf,
-        h_min=-np.inf,
-        h_penalty=1e3,
+        pos_min=-np.inf * np.ones(2),
+        pos_max=np.inf * np.ones(2),
+        penalty=1e3,
     ):
         super().__init__(x_eq, u_eq, q, r, dt)
 
-        self.h_min = h_min
-        self.h_penalty = h_penalty
-
         self.x = cp.Variable((6, M + 1))
         self.u = cp.Variable((2, M))
-        slack = cp.Variable(M + 1)
+
+        slack_min = cp.Variable((2, M + 1))
+        slack_max = cp.Variable((2, M + 1))
 
         self.x_init = cp.Parameter(6)
 
@@ -73,8 +73,10 @@ class MPC(_LQR):
             self.x[:, 0] == self.x_init,
             self.u >= u_min - u_eq[:, np.newaxis],
             self.u <= u_max - u_eq[:, np.newaxis],
-            self.x[1, :] + slack >= h_min - x_eq[1, np.newaxis],
-            slack >= 0,
+            self.x[:2, :] + slack_min >= pos_min[:, np.newaxis] - x_eq[:2, np.newaxis],
+            self.x[:2, :] - slack_max <= pos_max[:, np.newaxis] - x_eq[:2, np.newaxis],
+            slack_min >= 0,
+            slack_max >= 0,
         ]
 
         LQ = np.linalg.cholesky(self.q)
@@ -83,8 +85,9 @@ class MPC(_LQR):
         objective = cp.Minimize(
             cp.sum_squares(LQ.T @ self.x[:, :-1])
             + cp.sum_squares(LR.T @ self.u)
-            + cp.quad_form(self.x[:, 10], self.P)
-            + cp.sum(self.h_penalty * slack)
+            + cp.quad_form(self.x[:, -1], self.P)
+            + cp.sum(penalty * slack_min)
+            + cp.sum(penalty * slack_max)
         )
 
         self.problem = cp.Problem(objective, constraints)
