@@ -62,8 +62,8 @@ def plot_trajectory(xs):
 
     ax.plot([x[0] for x in xs], [x[1] for x in xs])
 
-    ax.set_xlabel(r"$x$ [m]")
-    ax.set_ylabel(r"$y$ [m]")
+    ax.set_xlabel(r"$y$ [m]")
+    ax.set_ylabel(r"$z$ [m]")
 
     ax.set_aspect('equal')
 
@@ -74,11 +74,11 @@ def plot_states_and_inputs(ts, xs, us):
     fig, ax = plt.subplots(3)
 
     state_labels = [
-        r"$x$ [m]",
         r"$y$ [m]",
+        r"$z$ [m]",
         r"$\theta$ [rad]",
-        r"$\dot{x}$ [m/s]",
         r"$\dot{y}$ [m/s]",
+        r"$\dot{z}$ [m/s]",
         r"$\dot{\theta}$ [rad/s]",
     ]
     input_labels = [
