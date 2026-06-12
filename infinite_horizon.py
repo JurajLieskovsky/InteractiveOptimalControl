@@ -14,7 +14,7 @@ __generated_with = "0.23.9"
 app = marimo.App()
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _():
     import marimo as mo
     import numpy as np
@@ -242,7 +242,7 @@ def _(
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(
     alpha,
     birotor,
