@@ -27,43 +27,50 @@ def _():
     import birotor
     import controllers
 
+    matplotlib.rcParams['figure.dpi'] = 600
+
     return birotor, controllers, matplotlib, mo, np
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
-    # Infinite Horizon Regulation
+    mo.vstack(
+        [
+            mo.md(r"""
+            # Infinite Horizon Regulation
+            Example demonstrating the stabilization of a birotor (quadrotor simplified into 2D) using LQR and MPC around an equilibrium point $x_{eq}, u_{eq}$. The dynamics of the simulated system are nonlinear and a process noise in the form of a force acting in the direction of the $y$-axis can be added. Input constraints (saturation) can be enabled in both LQR and MPC. However, in LQR the calculated inputs are simply clipped.
+            """),
+            mo.image(src="drawing.png", width=250).center(),
+            mo.md(r"""
 
-    Example demonstrating the stabilization of a birotor (quadrotor simplified into 2D) using LQR and MPC around an equilibrium point $x_{eq}, u_{eq}$. The dynamics of the simulated system are nonlinear and a process noise in the form of a force acting in the direction of the $y$-axis can be added. Input constraints (saturation) can be enabled in both LQR and MPC. However, in LQR the calculated inputs are simply clipped.
+            ## LQR
+            For a linearized discrete-time model of the system
+            $$
+            x_{k+1} = A x_k + B u_k,
+            $$
+            the LQR regulator minimizes the cost function
+            $$
+            J = \sum_{k=0}^\infty x_k^T Q x_k + u_k^T R u_k
+            $$
+            based on which it calculates:
+            - value function $V(x_k) = x_k^T P x_k$ (infinite horizon),
+            - feedback policy $\Pi(x_k) = u_{eq} - K (x_k - x_{eq})$.
 
-    ## LQR
-
-    For a linearized discrete-time model of the system
-    $$
-    x_{k+1} = A x_k + B u_k,
-    $$
-    the LQR regulator minimizes the cost function
-    $$
-    J = \sum_{k=0}^\infty x_k^T Q x_k + u_k^T R u_k
-    $$
-    based on which it calculates:
-    - value function $V(x_k) = x_k^T P x_k$ (infinite horizon),
-    - feedback policy $\Pi(x_k) = u_{eq} - K (x_k - x_{eq})$.
-
-    ## MPC
-    The MPC controller extends this problem by additionally considering hard constraints on $u_L$, $u_R$ and soft constraints on $y$, $z$ on a finite horizon. In full, its optimization problem can be stated as
-    $$
-    \begin{aligned}
-    \min_{x_{0:N}, u_{0:N-1}} \enspace& x_M^T P x_M + \sum_{k=0}^{M-1} x_k^T Q x_k + u_k^T R u_k \\
-    \text{s.t.} \enspace& x_{k+1} = A x_k + B u_k,\quad k \in [0,\ldots,N-1] \\
-    & u_{\min} \leq u_k \leq u_{\max},\quad k \in [0,\ldots,N-1] \\
-    & y_{\min} \leq y_k \leq y_{\max},\quad k \in [0,\ldots,N] \quad \text{(soft)} \\
-    & z_{\min} \leq z_k \leq z_{\max},\quad k \in [0,\ldots,N] \quad \text{(soft)}.
-    \end{aligned}
-    $$
-    The soft constraints are achieved by adding slack variables, penalized using an L1 norm that is scaled by a penalty parameter $\rho$. If the parameter $\rho$ is sufficiently large the penalty is exact (i.e, when feasible, the solution satisfies the constraints exactly).
-    """)
+            ## MPC
+            The MPC controller extends this problem by additionally considering hard constraints on $u_L$, $u_R$ and soft constraints on $y$, $z$ on a finite horizon. In full, its optimization problem can be stated as
+            $$
+            \begin{aligned}
+            \min_{x_{0:N}, u_{0:N-1}} \enspace& x_M^T P x_M + \sum_{k=0}^{M-1} x_k^T Q x_k + u_k^T R u_k \\
+            \text{s.t.} \enspace& x_{k+1} = A x_k + B u_k,\quad k \in [0,\ldots,N-1] \\
+            & u_{\min} \leq u_k \leq u_{\max},\quad k \in [0,\ldots,N-1] \\
+            & y_{\min} \leq y_k \leq y_{\max},\quad k \in [0,\ldots,N] \quad \text{(soft)} \\
+            & z_{\min} \leq z_k \leq z_{\max},\quad k \in [0,\ldots,N] \quad \text{(soft)}.
+            \end{aligned}
+            $$
+            The soft constraints are achieved by adding slack variables, penalized using an L1 norm that is scaled by a penalty parameter $\rho$. If the parameter $\rho$ is sufficiently large the penalty is exact (i.e, when feasible, the solution satisfies the constraints exactly).
+            """),
+        ]
+    )
     return
 
 
@@ -339,7 +346,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(birotor, matplotlib, x0, xs, xt):
+def _(mo, birotor, matplotlib, x0, xs, xt):
 
     fig1, ax1 = birotor.simulation.plot_trajectory(xs)
 
@@ -357,7 +364,7 @@ def _(birotor, matplotlib, x0, xs, xt):
     ax1.set_xlim(-5.5, 5.5)
     ax1.set_ylim(0.0, 6.5)
 
-    fig1
+    mo.center(fig1)
     return
 
 
@@ -370,9 +377,9 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def plot(birotor, ts, us, xs):
+def plot(mo, birotor, ts, us, xs):
     fig2, _ = birotor.simulation.plot_states_and_inputs(ts, xs, us)
-    fig2
+    mo.center(fig2)
     return
 
 
