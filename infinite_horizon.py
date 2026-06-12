@@ -1,11 +1,16 @@
 # /// script
 # requires-python = ">=3.11"
 # dependencies = [
+#   "marimo>=0.23.9",
 #   "numpy",
 #   "matplotlib",
-#   "birotor @ git+https://github.com/JurajLieskovsky/BirotorOptimalControl.git",
-#   "marimo>=0.23.9",
+#   "birotor",
+#   "controllers",
 # ]
+
+# [tool.uv.sources]
+# birotor = { git = "https://github.com/JurajLieskovsky/optimal_control_examples.git", subdirectory = "birotor" }
+# controllers = { git = "https://github.com/JurajLieskovsky/optimal_control_examples.git", subdirectory = "controllers" }
 # ///
 
 import marimo
@@ -18,10 +23,11 @@ app = marimo.App()
 def _():
     import marimo as mo
     import numpy as np
-    import birotor
     import matplotlib
+    import birotor
+    import controllers
 
-    return birotor, matplotlib, mo, np
+    return birotor, controllers, matplotlib, mo, np
 
 
 @app.cell(hide_code=True)
@@ -247,6 +253,7 @@ def _(
 def _(
     alpha,
     birotor,
+    controllers,
     controller_dropdown,
     initial_state,
     input_weights,
@@ -301,11 +308,11 @@ def _(
         M = mpc_horizon.value
         rho = 10**pos_penalty.value
 
-        controller = birotor.infinite_horizon_regulators.MPC(
+        controller = controllers.infinite_horizon_regulators.MPC(
             f, df, xt, ut, q, r, M, u_min, u_max, pos_min, pos_max, rho
         )
     elif controller_dropdown.value == "LQR":
-        controller = birotor.infinite_horizon_regulators.LQR(f, df, xt, ut, q, r)
+        controller = controllers.infinite_horizon_regulators.LQR(f, df, xt, ut, q, r)
 
     ts, xs, us, cs = birotor.simulation.simulate(
         nstep.value,
