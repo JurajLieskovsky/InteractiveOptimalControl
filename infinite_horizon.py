@@ -29,7 +29,11 @@ def _(mo):
     mo.md(r"""
     # Infinite Horizon Regulation
 
-    Example demonstrating the stabilization of a birotor (quadrotor simplified into 2D) using LQR and MPC around an equilibrium point $x_{eq}, u_{eq}$. For a linearized discrete-time model of the system
+    Example demonstrating the stabilization of a birotor (quadrotor simplified into 2D) using LQR and MPC around an equilibrium point $x_{eq}, u_{eq}$. The dynamics of the simulated system are nonlinear and a process noise in the form of a force acting in the direction of the $y$-axis can be added. Input constraints (saturation) can be enabled in both LQR and MPC. However, in LQR the calculated inputs are simply clipped.
+
+    ## LQR
+
+    For a linearized discrete-time model of the system
     $$
     x_{k+1} = A x_k + B u_k,
     $$
@@ -41,6 +45,7 @@ def _(mo):
     - value function $V(x_k) = x_k^T P x_k$ (infinite horizon),
     - feedback policy $\Pi(x_k) = u_{eq} - K (x_k - x_{eq})$.
 
+    ## MPC
     The MPC controller extends this problem by additionally considering hard constraints on $u_L$, $u_R$ and soft constraints on $y$, $z$ on a finite horizon. In full, its optimization problem can be stated as
     $$
     \begin{aligned}
@@ -52,8 +57,6 @@ def _(mo):
     \end{aligned}
     $$
     The soft constraints are achieved by adding slack variables, penalized using an L1 norm that is scaled by a penalty parameter $\rho$. If the parameter $\rho$ is sufficiently large the penalty is exact (i.e, when feasible, the solution satisfies the constraints exactly).
-
-    The dynamics of the simulated system are nonlinear and a process noise in the form of a force acting in the direction of the $y$-axis can be added. Input constraints can not only be enabled for MPC but also LQR. However, in this case they simply clip the calculated inputs.
     """)
     return
 
