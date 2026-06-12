@@ -24,23 +24,34 @@ def _():
     import marimo as mo
     import numpy as np
     import matplotlib
+
+    from pathlib import Path
+
     import birotor
     import controllers
 
-    matplotlib.rcParams['figure.dpi'] = 600
+    matplotlib.rcParams["figure.dpi"] = 600
 
-    return birotor, controllers, matplotlib, mo, np
+    return Path, birotor, controllers, matplotlib, mo, np
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _(mo, Path):
+    relative_image_path = "drawing.png"
+    github_image_path = "https://raw.githubusercontent.com/JurajLieskovsky/optimal_control_examples_marimo/refs/heads/main/drawing.png"
+
+    if Path(relative_image_path).is_file():
+        image_path = relative_image_path
+    else:
+        image_path = github_image_path
+
     mo.vstack(
         [
             mo.md(r"""
             # Infinite Horizon Regulation
             Example demonstrating the stabilization of a birotor (quadrotor simplified into 2D) using LQR and MPC around an equilibrium point $x_{eq}, u_{eq}$. The dynamics of the simulated system are nonlinear and a process noise in the form of a force acting in the direction of the $y$-axis can be added. Input constraints (saturation) can be enabled in both LQR and MPC. However, in LQR the calculated inputs are simply clipped.
             """),
-            mo.image(src="drawing.png", width=250).center(),
+            mo.image(src=image_path, width=250).center(),
             mo.md(r"""
 
             ## LQR
