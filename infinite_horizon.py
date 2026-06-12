@@ -302,7 +302,7 @@ def _(
         rho = 10**pos_penalty.value
 
         controller = birotor.infinite_horizon_regulators.MPC(
-            M, f, df, xt, ut, q, r, u_min, u_max, pos_min, pos_max, rho
+            f, df, xt, ut, q, r, M, u_min, u_max, pos_min, pos_max, rho
         )
     elif controller_dropdown.value == "LQR":
         controller = birotor.infinite_horizon_regulators.LQR(f, df, xt, ut, q, r)
