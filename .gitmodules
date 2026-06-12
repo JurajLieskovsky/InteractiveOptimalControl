@@ -1,0 +1,3 @@
+[submodule "libs/optimal_control_examples"]
+	path = libs/optimal_control_examples
+	url = git@github.com:JurajLieskovsky/BirotorOptimalControl.git
