@@ -1,0 +1,14 @@
+[project]
+name="optimal-control-examples-marimo"
+version="0.0.1"
+requires-python = ">=3.11"
+
+dependencies = [
+  "marimo",
+  "numpy",
+  "matplotlib",
+  "birotor",
+]
+
+[tool.uv.sources]
+birotor = { path = "libs/optimal_control_examples", editable = true }
