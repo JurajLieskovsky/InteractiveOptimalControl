@@ -80,9 +80,7 @@ def _(mo, np):
     nstep = mo.ui.number(start=1, step=1, value=600, debounce=True, label=r"$N$")
 
     noise_checkbox = mo.ui.checkbox(value=False, label="Process noise")
-    noise_scale = mo.ui.number(
-        start=-2, stop=2, step=1, value=0, label="- scale - 1e"
-    )
+    noise_scale = mo.ui.number(start=-2, stop=2, step=1, value=0, label="- scale - 1e")
 
     pos_checkbox = mo.ui.checkbox(value=True, label="soft position constraints")
     pos_penalty = mo.ui.number(
@@ -266,11 +264,19 @@ def _(
     timestep,
 ):
     x0 = np.array(initial_state.value)
+    dt = timestep.value
+
+    def f(k, x, u):
+        return birotor.dynamics.rk4_f(k, x, u, dt)
+
+    def df(k, x, u):
+        return birotor.dynamics.rk4_df(k, x, u, dt)
+
     xt = np.array([target_position.value[0], target_position.value[1], 0, 0, 0, 0.0])
+    ut = birotor.dynamics.u_eq
 
     q = alpha.value * np.diag(state_weights)
     r = (1 - alpha.value) * np.diag(input_weights)
-    dt = timestep.value
 
     if saturation_checkbox.value:
         u_min = saturation_slider.value[0]
@@ -292,23 +298,14 @@ def _(
         pos_max = np.inf * np.ones(2)
 
     if controller_dropdown.value == "MPC":
+        M = mpc_horizon.value
+        rho = 10**pos_penalty.value
+
         controller = birotor.infinite_horizon_regulators.MPC(
-            mpc_horizon.value,
-            xt,
-            birotor.dynamics.u_eq,
-            q,
-            r,
-            dt,
-            u_min,
-            u_max,
-            pos_min,
-            pos_max,
-            10**pos_penalty.value,
+            M, f, df, xt, ut, q, r, u_min, u_max, pos_min, pos_max, rho
         )
     elif controller_dropdown.value == "LQR":
-        controller = birotor.infinite_horizon_regulators.LQR(
-            xt, birotor.dynamics.u_eq, q, r, dt
-        )
+        controller = birotor.infinite_horizon_regulators.LQR(f, df, xt, ut, q, r)
 
     ts, xs, us, cs = birotor.simulation.simulate(
         nstep.value,
