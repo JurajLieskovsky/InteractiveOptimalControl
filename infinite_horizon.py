@@ -48,8 +48,8 @@ def _(mo, Path):
     mo.vstack(
         [
             mo.md(r"""
-            # Infinite Horizon Regulation
-            Example demonstrating the stabilization of a birotor (quadrotor simplified into 2D) using LQR and MPC around an equilibrium point $x_{eq}, u_{eq}$. The dynamics of the simulated system are nonlinear and a process noise in the form of a force acting in the direction of the $y$-axis can be added. Input constraints (saturation) can be enabled in both LQR and MPC. However, in LQR the calculated inputs are simply clipped.
+            # Birotor Stabilization
+            Example demonstrating the stabilization of a birotor (quadrotor simplified into 2D) using LQR and MPC around an equilibrium point $x_{eq}, u_{eq}$. Even though the controller are based on a linear model of the system, the simulation itself uses nonlinear dynamics. Process noise, in the form of a force acting in the direction of the $y$-axis, can also be added to the simulation. Input constraints (saturation) can also be enabled. In the case of MPC these are considered in the underlying optimizaiton problem along with soft constraints on the position of the birotor in space which can be additionally enabled.
             """),
             mo.image(src=image_path, width=250).center(),
             mo.md(r"""
@@ -103,7 +103,7 @@ def _(mo, np):
     timestep = mo.ui.number(value=1e-2, debounce=True, label=r"$\Delta t\ [\text{s}]$")
     nstep = mo.ui.number(start=1, step=1, value=600, debounce=True, label=r"$N$")
 
-    noise_checkbox = mo.ui.checkbox(value=False, label="Process noise")
+    noise_checkbox = mo.ui.checkbox(value=False, label="process noise")
     noise_scale = mo.ui.number(start=-2, stop=2, step=1, value=0, label="- scale - 1e")
 
     pos_checkbox = mo.ui.checkbox(value=True, label="soft position constraints")
