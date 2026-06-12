@@ -28,9 +28,9 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      showguides="true"
-     inkscape:zoom="2.9949172"
-     inkscape:cx="335.23464"
-     inkscape:cy="302.17864"
+     inkscape:zoom="2.856449"
+     inkscape:cx="263.26394"
+     inkscape:cy="225.45475"
      inkscape:window-width="1788"
      inkscape:window-height="1137"
      inkscape:window-x="0"
@@ -77,6 +77,13 @@
        inkscape:locked="false"
        inkscape:label=""
        inkscape:color="rgb(0,134,229)" />
+    <sodipodi:guide
+       position="66.258334,223.62949"
+       orientation="-0.25881905,0.96592583"
+       id="guide26"
+       inkscape:locked="false"
+       inkscape:label=""
+       inkscape:color="rgb(0,134,229)" />
   </sodipodi:namedview>
   <defs
      id="defs1">
@@ -112,7 +119,7 @@
          id="path1"
          sodipodi:nodetypes="cccc" />
       <path
-         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:1;stroke-linecap:butt;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.7;stroke-linecap:butt;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
          d="m 76.508522,74.547111 c -11.108605,-0.589804 -7.260553,5.750338 0,0 7.260553,-5.750338 11.108605,0.589804 0,0 z"
          id="path24"
          sodipodi:nodetypes="zzz" />
@@ -122,6 +129,11 @@
          xlink:href="#path24"
          id="use24"
          transform="translate(26.109075,-6.995906)" />
+      <path
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker-start:url(#ConcaveTriangle);marker-end:url(#ConcaveTriangle)"
+         d="M 77.029685,70.463808 87.203987,67.737612"
+         id="path27"
+         sodipodi:nodetypes="cc" />
     </a>
     <path
        style="fill:none;stroke:#f30000;stroke-width:1;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#ConcaveTriangle)"
@@ -165,51 +177,64 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333px;font-family:Sans;-inkscape-font-specification:Sans;writing-mode:lr-tb;direction:ltr;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-linecap:butt;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
-       x="101.42228"
-       y="56.547932"
+       x="100.89312"
+       y="57.077099"
        id="text15"><tspan
          sodipodi:role="line"
          id="tspan15"
          style="stroke-width:0"
-         x="101.42228"
-         y="56.547932">u<tspan
+         x="100.89312"
+         y="57.077099">u<tspan
    style="font-size:65%;baseline-shift:sub"
    id="tspan16">R</tspan></tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333px;font-family:Sans;-inkscape-font-specification:Sans;writing-mode:lr-tb;direction:ltr;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-linecap:butt;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
-       x="74.829628"
-       y="63.543835"
+       x="74.53376"
+       y="63.761909"
        id="text17"><tspan
          sodipodi:role="line"
          id="tspan17"
          style="stroke-width:0"
-         x="74.829628"
-         y="63.543835">u<tspan
+         x="74.53376"
+         y="63.761909">u<tspan
    style="font-size:65%;baseline-shift:sub"
    id="tspan18">L</tspan></tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333px;font-family:Sans;-inkscape-font-specification:Sans;writing-mode:lr-tb;direction:ltr;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-linecap:butt;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
-       x="70.367157"
-       y="86.135498"
+       x="80.613998"
+       y="67.908638"
+       id="text17-6"><tspan
+         sodipodi:role="line"
+         id="tspan17-5"
+         style="stroke-width:0"
+         x="80.613998"
+         y="67.908638">a<tspan
+   style="font-size:65%;baseline-shift:sub"
+   id="tspan18-6" /></tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333px;font-family:Sans;-inkscape-font-specification:Sans;writing-mode:lr-tb;direction:ltr;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-linecap:butt;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       x="73.36467"
+       y="86.764496"
        id="text17-9"><tspan
          sodipodi:role="line"
          id="tspan17-1"
          style="stroke-width:0"
-         x="70.367157"
-         y="86.135498">y</tspan></text>
+         x="73.36467"
+         y="86.764496">y</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333px;font-family:Sans;-inkscape-font-specification:Sans;writing-mode:lr-tb;direction:ltr;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-linecap:butt;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
-       x="59.854774"
-       y="76.402977"
+       x="62.852291"
+       y="77.031975"
        id="text17-9-9"><tspan
          sodipodi:role="line"
          id="tspan17-1-7"
          style="stroke-width:0"
-         x="59.854774"
-         y="76.402977">z</tspan></text>
+         x="62.852291"
+         y="77.031975">z</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333px;font-family:Sans;-inkscape-font-specification:Sans;writing-mode:lr-tb;direction:ltr;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-linecap:butt;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
@@ -220,7 +245,7 @@
          id="tspan19"
          style="stroke-width:0"
          x="96.970726"
-         y="77.961113">m,I</tspan></text>
+         y="77.961113">m, I</tspan></text>
     <use
        x="0"
        y="0"
@@ -237,7 +262,7 @@
        transform="rotate(-15)" />
     <path
        style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.7;stroke-linecap:butt;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker-start:url(#ConcaveTriangle);marker-end:url(#ConcaveTriangle)"
-       d="m 57.508009,78.927866 v 9.427893 h 9.427893"
+       d="m 60.505527,79.556873 v 9.427893 h 9.427893"
        id="path26" />
   </g>
 </svg>

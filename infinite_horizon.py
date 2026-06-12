@@ -141,7 +141,7 @@ def _(mo, np):
         max_value=[5, 6],
         step=0.25,
         debounce=True,
-        label=r"$[y_t, z_t]$",
+        label=r"$p_t$",
     )
 
     controller_dropdown = mo.ui.dropdown(options=["MPC", "LQR"], value="MPC")
@@ -236,9 +236,15 @@ def _(
             "Simulation (number of steps, timestep length, process noise)": mo.vstack(
                 [nstep, timestep, cond_noise]
             ),
-            "Initial state and target position": mo.hstack(
-                [initial_state, target_position], justify="center"
-            ),
+            "Initial state and target position": mo.vstack([
+                mo.md(r"""
+                    - $x = \begin{bmatrix} y & z & \theta & \dot{y} & \dot{z} & \dot{\theta}\end{bmatrix}$
+                    - $p = \begin{bmatrix} y & z \end{bmatrix}$.
+                """), 
+                mo.hstack(
+                    [initial_state, target_position], justify="center"
+                ),
+            ]),
             "Cost weights": mo.vstack(
                 [
                     mo.md(
