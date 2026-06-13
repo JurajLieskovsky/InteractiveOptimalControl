@@ -1,6 +1,6 @@
 # Optimal Control Examples
 
-Interactive examples of basic optimal control (LQR and LQ-MPC) written with [marimo](https://marimo.io/).
+Interactive examples of basic optimal control (LQR and LQ-MPC) written with [marimo](https://marimo.io/). The notebooks are a thin wrapper around a [small monorepo](https://github.com/JurajLieskovsky/optimal_control_examples) written in standard python.
 
 ## Getting Started
 
