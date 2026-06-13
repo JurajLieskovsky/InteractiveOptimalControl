@@ -71,7 +71,7 @@ def _(mo, Path):
             The MPC controller extends this problem by additionally considering hard constraints on $u_L$, $u_R$ and soft constraints on $y$, $z$ on a finite horizon. In full, its optimization problem can be stated as
             $$
             \begin{aligned}
-            \min_{x_{0:N}, u_{0:N-1}} \enspace& x_M^T P x_M + \sum_{k=0}^{M-1} x_k^T Q x_k + u_k^T R u_k \\
+            \min_{x_{0:M}, u_{0:M-1}} \enspace& x_M^T P x_M + \sum_{k=0}^{M-1} x_k^T Q x_k + u_k^T R u_k \\
             \text{s.t.} \enspace& x_{k+1} = A x_k + B u_k,\quad k \in [0,\ldots,N-1] \\
             & u_{\min} \leq u_k \leq u_{\max},\quad k \in [0,\ldots,N-1] \\
             & y_{\min} \leq y_k \leq y_{\max},\quad k \in [0,\ldots,N] \quad \text{(soft)} \\
